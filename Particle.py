@@ -5,8 +5,14 @@ class ParticleClass:
     def __init__(self, PosX, PosY, Diam, Mass, VelMag, Theta,Simulator,InitCount):
         #override for testing
         #Theta = np.deg2rad(30)
+        
+        #keep track of which iteration of the Simulator we are in.
+        #set to -1 as default for the first step.
+        self.CurrentCollisionIteration = -1
+
         #Particle Variables
         self.InitNo = InitCount #for the particle to know which number it is, for indexing.
+        
         self.R = np.array([PosX, PosY])
         self.V = np.array([VelMag * np.cos((Theta)),    VelMag * np.sin((Theta))])
         #Particle Constants
@@ -20,6 +26,7 @@ class ParticleClass:
 
         #Store pairs
         self.PairedParticles = []
+        self.PairedPairs = [] #remember all the pairs this particle is involved in
 
         #Variables
         self.WallCollisionTime = None #default
@@ -51,6 +58,9 @@ class ParticleClass:
         self.Simulator.Saved[c][3][i] = v[1]
 
     def updateWallCollision(self,):
+        #have we already gone through this particle?
+        if self.CurrentCollisionIteration == self.Simulator.COLLISIONS:  return
+        self.CurrentCollisionIteration = self.Simulator.COLLISIONS
         #the general idea is find the intersection of 2 vector lines
         #then create the intersection as an imaginary particle
         #then see if our particle is approaching said particle

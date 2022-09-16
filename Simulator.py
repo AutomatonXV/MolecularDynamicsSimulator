@@ -23,6 +23,8 @@ class SimulatorClass:
         #All Particles
         self.Ensemble = []
         self.Pairs = []
+        #For ranking purposes acccording to time of collision
+        self.CollisionTimeTable = []
 
         #FullSimulation
         self.Saved = []
@@ -142,6 +144,50 @@ class SimulatorClass:
            
         #update time
         self.t0 = self.ShortestCollision
+
+    def CTTSearchPosition(self,tc):
+        #find position of particle where it should be inserted
+        #this position is the first highest time value, 
+        #because when using insert, it will shove the value at that index right
+        for i in range(len(self.CollisionTimeTable)):
+            obj = self.CollisionTimeTable[i]
+            if isinstance(obj, ParticleClass):
+                t = obj.WallCollisionTime
+            else:
+                t = obj.Tc
+                #some pairs will never collide
+                #reached the end of the list that is full of Nones
+                if t == None: return i
+
+            if t > tc:
+                return i
+        return None #insert at the end of the list
+
+
+    def setCollisionTimeTable(self,):
+        #now that all the particles and pairs have tc, rank them.
+
+        for p in self.Ensemble:
+            tc = p.WallCollisionTime
+            InsertIndex = self.CTTSearchPosition(tc)
+            if InsertIndex == None: 
+                self.CollisionTimeTable.append(p)
+            else:
+                self.CollisionTimeTable.insert(InsertIndex, p)
+
+        for p in self.Pairs:
+            tc = p.Tc
+            #some particles will never collide
+            if tc == None: self.CollisionTimeTable.append(p); continue
+
+            InsertIndex = self.CTTSearchPosition(tc)
+            if InsertIndex == None: 
+                self.CollisionTimeTable.append(p)
+            else:
+                self.CollisionTimeTable.insert(InsertIndex, p)
+
+            
+        
 
     def GenerateDistribution(self,):
         def findBracket(x):
