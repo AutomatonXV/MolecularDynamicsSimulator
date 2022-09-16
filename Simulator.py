@@ -26,6 +26,15 @@ class SimulatorClass:
 
         #FullSimulation
         self.Saved = []
+        #each zero is a count from 0-0.05, 0.05 to 0.1
+        self.BracketInterval = 0.05
+        self.BracketStart, self.BracketEnd = 0,5
+        self.BracketSteps = (self.BracketEnd-self.BracketStart)/self.BracketInterval
+        
+
+        self.SpeedBracketsU = np.zeros(int(self.BracketSteps))
+        self.SpeedBracketsV = np.zeros(int(self.BracketSteps))
+        self.SpeedBracketsC = np.zeros(int(self.BracketSteps))
 
         #boundary
         self.Sides = int(self.N**(1/2))
@@ -128,3 +137,33 @@ class SimulatorClass:
             P2.U, P2.V = NewV2[0], NewV2[1]
         #update time
         self.t0 = self.ShortestCollision
+
+    def GenerateDistribution(self,):
+        def findBracket(x):
+            #print("finding bracket for ",np.abs(x))
+            #i = 0 #my bracket slot
+            x = np.abs(x)
+            for i in range(0, int(self.BracketSteps)):
+                StartRange = 0.05*i
+                EndRange = 0.05*(i+1)
+                if StartRange <= x and x < EndRange:
+                    return i
+            return None #faster than 5 unit/time
+
+        BracketsFoundX = 0
+        for p in self.Ensemble:
+            U,V,C = p.U,p.V, np.sqrt(p.U**2 + p.V**2)
+            U_i,V_i,C_i = findBracket(U), findBracket(V), findBracket(C)
+            if U_i != None:
+                self.SpeedBracketsU[U_i] = self.SpeedBracketsU[U_i] + 1
+                BracketsFoundX +=1
+
+            if V_i != None:
+                self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
+            if C_i != None:
+                self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
+            #Normalize by total particles
+        print("Brackets FOUND",BracketsFoundX)
+        return self.SpeedBracketsU/self.N, self.SpeedBracketsV/self.N, self.SpeedBracketsC/self.N
+
+            

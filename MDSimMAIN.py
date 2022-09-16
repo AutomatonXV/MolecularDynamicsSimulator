@@ -10,6 +10,8 @@ import numpy as np
 import random as rng
 from Particle import ParticleClass
 from Simulator import SimulatorClass
+from PlotAssist import HigsPlot
+import EZColors
 import time 
 #################################################
 '''
@@ -21,7 +23,7 @@ m = 0.1                             # mass
 V_spheres = 4/3*np.pi*(d/2)**3      # volume
 
 #   Simulation Constants
-N = 16                             # number of particles
+N = 36                             # number of particles
 eta = np.pi/15                      # packing fraction
 V = d**3 * (N*np.pi/(6*eta))        # volume of primary cube
 L = 1
@@ -65,9 +67,36 @@ while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS and MainSim.t0 < MainSim.MAXTI
         
         MainSim.StepForward()
         MainSim.Screenshot()
-        print("COLLISION %\t",100* MainSim.COLLISIONS/MainSim.MAX_COLLISIONS, "%, \tSIM. TIME\t", MainSim.t0)
+        CollisionPercent = MainSim.COLLISIONS/MainSim.MAX_COLLISIONS*100
+        if CollisionPercent%25 == 0: 
+                print("COLLISION %\t",100* MainSim.COLLISIONS/MainSim.MAX_COLLISIONS, 
+                "%, \tSIM. TIME\t", MainSim.t0,
+                "\t Time Elapsed: \t",time.time() - SimulationStartTime)
+        
         #################################################
 SimulationEndTime = time.time() 
 Elapsed = SimulationEndTime - SimulationStartTime
 print("TOTAL TIME ELAPSED:\t", Elapsed)
-MainSim.Movie()
+
+
+'''
+        POST-PROCESSING
+'''
+
+# MainSim.Movie()
+
+
+# F_Cx, F_Cy, C = MainSim.GenerateDistribution()
+# print(F_Cx)
+# Speed = np.arange(MainSim.BracketStart, MainSim.BracketEnd, MainSim.BracketInterval)
+
+# HPlot = HigsPlot()
+# Clr = EZColors.CustomColors(colorLabel = 'red')
+# HPlot.AxLabels(X = "Speeds", Y = "f(C)")
+# #HPlot.SetTicks('Y',0.0,1,0.2)
+# HPlot.SetLim(Left = 0, Right = 5, Top = .3, Bottom = 0)
+# #HPlot.SetTicks('Y',1,11,1)
+# HPlot.Plot((Speed, C), Color = Clr)
+# #HPlot.plt.axvline(x=FlightTime, color = 'k', linestyle = '--')
+# HPlot.Finalize()
+# HPlot.Show()

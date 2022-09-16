@@ -33,3 +33,20 @@ import matplotlib.pyplot as plt
 
 A = None
 if not A: print("nice")
+
+print(2.)
+
+# 0 -0.05, 0.05 - 0.1
+# if my particle is moving at 0.055, then it is on bracket 2
+
+print((0.055%0.05)/(0.05))
+
+def findBracket(x):
+    i = 0 #my bracket slot
+    for i in range(0, 100):
+        StartRange = 0.05*i
+        EndRange = 0.05*(i+1)
+        if StartRange <= x and x < EndRange:
+            return i
+A = 0
+if A == None: print("what")
