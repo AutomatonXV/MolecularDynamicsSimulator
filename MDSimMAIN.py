@@ -23,7 +23,7 @@ m = 0.1                             # mass
 V_spheres = 4/3*np.pi*(d/2)**3      # volume
 
 #   Simulation Constants
-N = 36                             # number of particles
+N = 400                             # number of particles
 eta = np.pi/15                      # packing fraction
 V = d**3 * (N*np.pi/(6*eta))        # volume of primary cube
 L = 1
@@ -36,12 +36,14 @@ MainSim = SimulatorClass(N, eta)
 '''
             INITIALIZATION
 '''
+InitCount = 0
 Sides = int(N**(1/2))
 for yPos in range(1,Sides+1):
     for xPos in range(1,Sides+1):
         theta_rng = 2*np.pi*rng.random()
-        p = ParticleClass(xPos, yPos, d, m, 1, theta_rng, MainSim)
+        p = ParticleClass(xPos, yPos, d, m, 1, theta_rng, MainSim, InitCount)
         MainSim.Ensemble.append(p)
+        InitCount+=1
 
 MainSim.ConstructPairs()
 
@@ -51,6 +53,7 @@ while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS and MainSim.t0 < MainSim.MAXTI
         #reset collision objects
         MainSim.CollisionObject = None
         MainSim.ShortestCollision = None
+        OldTc = MainSim.t0
         #Check for pair collision
         for pairs in  MainSim.Pairs: 
                 if not pairs.isApproaching(): continue
@@ -67,8 +70,10 @@ while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS and MainSim.t0 < MainSim.MAXTI
         
         MainSim.StepForward()
         MainSim.Screenshot()
+        if MainSim.t0 < OldTc: break #WTF?
+
         CollisionPercent = MainSim.COLLISIONS/MainSim.MAX_COLLISIONS*100
-        if CollisionPercent%25 == 0: 
+        if CollisionPercent%5 == 0: 
                 print("COLLISION %\t",100* MainSim.COLLISIONS/MainSim.MAX_COLLISIONS, 
                 "%, \tSIM. TIME\t", MainSim.t0,
                 "\t Time Elapsed: \t",time.time() - SimulationStartTime)
@@ -83,20 +88,23 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
         POST-PROCESSING
 '''
 
-# MainSim.Movie()
+#MainSim.Movie()
 
 
-# F_Cx, F_Cy, C = MainSim.GenerateDistribution()
-# print(F_Cx)
-# Speed = np.arange(MainSim.BracketStart, MainSim.BracketEnd, MainSim.BracketInterval)
+F_Cx, F_Cy, C = MainSim.GenerateDistribution()
+Speed = np.arange(MainSim.BracketStart, MainSim.BracketEnd, MainSim.BracketInterval)
 
-# HPlot = HigsPlot()
-# Clr = EZColors.CustomColors(colorLabel = 'red')
-# HPlot.AxLabels(X = "Speeds", Y = "f(C)")
-# #HPlot.SetTicks('Y',0.0,1,0.2)
-# HPlot.SetLim(Left = 0, Right = 5, Top = .3, Bottom = 0)
-# #HPlot.SetTicks('Y',1,11,1)
-# HPlot.Plot((Speed, C), Color = Clr)
-# #HPlot.plt.axvline(x=FlightTime, color = 'k', linestyle = '--')
-# HPlot.Finalize()
-# HPlot.Show()
+HPlot = HigsPlot()
+Clr1 = EZColors.CustomColors(colorLabel = 'red')
+Clr2 = EZColors.CustomColors(colorLabel = 'blue')
+Clr3 = EZColors.CustomColors(colorLabel = 'black')
+HPlot.AxLabels(X = "Speeds", Y = "f(C)")
+#HPlot.SetTicks('Y',0.0,1,0.2)
+HPlot.SetLim(Left = 0, Right = 5, Top = 1, Bottom = 0)
+#HPlot.SetTicks('Y',1,11,1)
+HPlot.Plot((Speed, F_Cx), Color = Clr1)
+HPlot.Plot((Speed, F_Cy), Color = Clr2)
+HPlot.Plot((Speed, C), Color = Clr3)
+#HPlot.plt.axvline(x=FlightTime, color = 'k', linestyle = '--')
+HPlot.Finalize()
+HPlot.Show()

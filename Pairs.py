@@ -21,8 +21,18 @@ class PairsClass:
         R12Squared = np.dot(R12,R12)
         Discriminant = np.sqrt( DOTV12R12**2 - V12Squared * (R12Squared - sigma) )
         #negative sign is physically possible. Discard other one.
-        self.Tc = t0 + (-DOTV12R12 - Discriminant)/(V12Squared)
-        
+        PastTc = t0
+        result1 = (-DOTV12R12 - Discriminant)/(V12Squared)
+        result2 = (-DOTV12R12 + Discriminant)/(V12Squared)
+        if result1 > 0:
+            self.Tc = t0 + result1
+        else:
+            self.Tc = t0 + result2
+        # if self.Tc < PastTc: 
+        #         # print("FATAL TIME ERROR: PAIR COLLISION", PastTc, self.Tc, self.Tc - PastTc)
+        #         # print(R12, V12, Discriminant)
+        #         # print((-DOTV12R12 - Discriminant)/(V12Squared))
+        #         # print( (-DOTV12R12 + Discriminant)/(V12Squared))
         if not self.Simulator.ShortestCollision: self.setSimulatorShortest(); return
         if self.Simulator.ShortestCollision > self.Tc: self.setSimulatorShortest(); return
         return 

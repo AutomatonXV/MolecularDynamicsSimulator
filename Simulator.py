@@ -26,6 +26,13 @@ class SimulatorClass:
 
         #FullSimulation
         self.Saved = []
+        #populate this with MAXCOLLISION
+        for c in range(self.MAX_COLLISIONS+1):
+            Xpos = np.zeros(self.N);    Ypos = np.zeros(self.N)
+            Uvel = np.zeros(self.N);    Vvel = np.zeros(self.N)
+            self.Saved.append([Xpos, Ypos, Uvel, Vvel])
+
+
         #each zero is a count from 0-0.05, 0.05 to 0.1
         self.BracketInterval = 0.05
         self.BracketStart, self.BracketEnd = 0,5
@@ -79,13 +86,9 @@ class SimulatorClass:
         return isPaired
 
     def Screenshot(self,):
-        X,Y = self.__getAllPositions()
-        self.Saved.append([X,Y])
-        # tp = plt.scatter(X,Y, color = 'r', s = 3)
-        # #show it
-        # plt.pause(self.TIMESTEP)
-        # #plt.clf()
-        # tp.remove()
+        #Save information of ALL positions+vel at EACH time frame.
+        self.__getAllPositions()
+       
         
     def Movie(self,):
         for XY in self.Saved:
@@ -96,14 +99,15 @@ class SimulatorClass:
         self.plt.show()
 
     def __getAllPositions(self,):
-        Xpos = np.zeros(self.N)
-        Ypos = np.zeros(self.N)
-        for i in range(0,self.N):
-            p = self.Ensemble[i]
-            Xpos[i] = p.X
-            Ypos[i] = p.Y
-
-        return Xpos, Ypos
+        #The following is being handled by Particle updatePosition(), hopefully
+        # c = self.COLLISIONS #index 
+        
+        # for i in range(0,self.N):
+        #     p = self.Ensemble[i]
+        #     self.Saved[c][0][i] = p.R[0];  self.Saved[c][1][i] = p.R[1]
+        #     self.Saved[c][2][i] = p.V[0];  self.Saved[c][3][i] = p.V[1]
+        pass
+        #return Xpos, Ypos, Uvel, Vvel
 
 
     def StepForward(self,):
@@ -121,9 +125,9 @@ class SimulatorClass:
             CP = self.CollisionObject.WallCollisionPoint
             #This is going to be very dumb:
             if CP[0] == 0 or CP[0] == self.Boundary:
-                self.CollisionObject.U = -self.CollisionObject.U
+                self.CollisionObject.V[0] = -self.CollisionObject.V[0]
             if CP[1] == 0 or CP[1]== self.Boundary:
-                self.CollisionObject.V = -self.CollisionObject.V
+                self.CollisionObject.V[1] = -self.CollisionObject.V[1]
         else:
             #print("It was a particle that collided with another particle!")
             P1, P2 = self.CollisionObject.Pair[0], self.CollisionObject.Pair[1]
@@ -133,8 +137,9 @@ class SimulatorClass:
             R12_Hat = R12 / np.linalg.norm(R12)
             NewV1 = V1 - np.dot((V1 - V2), R12_Hat) * R12_Hat
             NewV2 = V2 + np.dot((V1 - V2), R12_Hat) * R12_Hat
-            P1.U, P1.V = NewV1[0], NewV1[1]
-            P2.U, P2.V = NewV2[0], NewV2[1]
+            P1.V = NewV1
+            P2.V = NewV2
+           
         #update time
         self.t0 = self.ShortestCollision
 
@@ -149,21 +154,27 @@ class SimulatorClass:
                 if StartRange <= x and x < EndRange:
                     return i
             return None #faster than 5 unit/time
+        
+        for Ensemble in self.Saved:
+            #0 = X, 1 = Y, 2 = U, 3 = V
+            #These are the lists of u,v of every single particle
+            UList,VList = Ensemble[2], Ensemble[3]
+            for i in range(len(UList)):
+                U,V = UList[i], VList[i]
+                C =  np.sqrt(U**2 + V**2)
+                #do not confuse the i subscript here with i'th iter
+                # it is to say i_th "bracket"
+                U_i,V_i,C_i = findBracket(U), findBracket(V), findBracket(C)
+                if U_i != None:
+                    self.SpeedBracketsU[U_i] = self.SpeedBracketsU[U_i] + 1
 
-        BracketsFoundX = 0
-        for p in self.Ensemble:
-            U,V,C = p.U,p.V, np.sqrt(p.U**2 + p.V**2)
-            U_i,V_i,C_i = findBracket(U), findBracket(V), findBracket(C)
-            if U_i != None:
-                self.SpeedBracketsU[U_i] = self.SpeedBracketsU[U_i] + 1
-                BracketsFoundX +=1
-
-            if V_i != None:
-                self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
-            if C_i != None:
-                self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
+                if V_i != None:
+                    self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
+                if C_i != None:
+                    self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
+           
             #Normalize by total particles
-        print("Brackets FOUND",BracketsFoundX)
-        return self.SpeedBracketsU/self.N, self.SpeedBracketsV/self.N, self.SpeedBracketsC/self.N
+        Normalization = self.MAX_COLLISIONS*self.N
+        return self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
 
             

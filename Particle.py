@@ -2,14 +2,13 @@ import numpy as np
 
 class ParticleClass:
 
-    def __init__(self, PosX, PosY, Diam, Mass, VelMag, Theta,Simulator):
+    def __init__(self, PosX, PosY, Diam, Mass, VelMag, Theta,Simulator,InitCount):
         #override for testing
         #Theta = np.deg2rad(30)
         #Particle Variables
-        self.X = PosX
-        self.Y = PosY
-        self.U = VelMag * np.cos((Theta))
-        self.V = VelMag * np.sin((Theta))
+        self.InitNo = InitCount #for the particle to know which number it is, for indexing.
+        self.R = np.array([PosX, PosY])
+        self.V = np.array([VelMag * np.cos((Theta)),    VelMag * np.sin((Theta))])
         #Particle Constants
         self.d = Diam
         self.m = Mass
@@ -28,11 +27,11 @@ class ParticleClass:
 
     def getR(self,):
         #convert XY into vector
-        return np.array([self.X, self.Y])
+        return self.R
 
     def getV(self,):
         #convert XY into vector
-        return np.array([self.U, self.V])
+        return self.V
 
     def setSimulatorShortest(self,):
         self.Simulator.ShortestCollision = self.WallCollisionTime
@@ -42,15 +41,21 @@ class ParticleClass:
         r = self.getR()
         v = self.getV()
         r1 = r + v*dt
-        self.X = r1[0]
-        self.Y = r1[1]
+        self.R = r1
+        #write this down into the simulator
+        c = self.Simulator.COLLISIONS
+        i = self.InitNo
+        self.Simulator.Saved[c][0][i] = r1[0]
+        self.Simulator.Saved[c][1][i] = r1[1]
+        self.Simulator.Saved[c][2][i] = v[0]
+        self.Simulator.Saved[c][3][i] = v[1]
 
     def updateWallCollision(self,):
         #the general idea is find the intersection of 2 vector lines
         #then create the intersection as an imaginary particle
         #then see if our particle is approaching said particle
         #then calculate closest time
-        Rx = self.X ; Ry = self.Y ; Vx = self.U ; Vy = self.V 
+        Rx = self.R[0] ; Ry = self.R[1] ; Vx = self.V[0] ; Vy = self.V[1] 
         X1 = self.Simulator.Boundary ; Y1 = self.Simulator.Boundary
         #the equation for our particle is:
         # (Rx, Ry) + (Vx, Vy)S
@@ -100,7 +105,17 @@ class ParticleClass:
             #Condition 3: Must collide
             if (Determinant) <0: continue
             t0 = self.Simulator.t0
-            tc = t0 + ( (-np.dot(V12,R12)) - np.sqrt(Determinant)  )/V12SQUARED
+            result1 = ( (-np.dot(V12,R12)) - np.sqrt(Determinant)  )/V12SQUARED
+            result2 = ( (-np.dot(V12,R12)) + np.sqrt(Determinant)  )/V12SQUARED
+            if result1 > 0:
+                tc = t0 + result1
+            else:
+                tc = t0 + result2
+            if tc < t0: 
+                print("FATAL TIME ERROR: WALL COLLISION", t0, tc)
+                print(R12, V12, Determinant)
+                print(( (-np.dot(V12,R12)) - np.sqrt(Determinant)  )/V12SQUARED)
+                print(( (-np.dot(V12,R12)) + np.sqrt(Determinant)  )/V12SQUARED)
 
             self.WallCollisionPoint = pos
             self.WallCollisionTime = tc
