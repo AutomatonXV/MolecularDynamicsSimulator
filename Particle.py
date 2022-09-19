@@ -29,7 +29,7 @@ class ParticleClass:
         self.PairedPairs = [] #remember all the pairs this particle is involved in
 
         #Variables
-        self.WallCollisionTime = None #default
+        self.Tc = 10**10 #default
         self.WallCollisionPoint = None
 
     def getR(self,):
@@ -41,7 +41,7 @@ class ParticleClass:
         return self.V
 
     def setSimulatorShortest(self,):
-        self.Simulator.ShortestCollision = self.WallCollisionTime
+        self.Simulator.ShortestCollision = self.Tc
         self.Simulator.CollisionObject = self
 
     def updatePosition(self,dt):
@@ -92,7 +92,7 @@ class ParticleClass:
         AllPos = [Pos_left, Pos_right, Pos_bottom, Pos_top]
         
         #print(AllPos)
-        self.WallCollisionTime = 10**10
+        self.Tc = 10**10
         self.WallCollisionPoint = None
 
         for pos in AllPos:
@@ -128,13 +128,13 @@ class ParticleClass:
                 print(( (-np.dot(V12,R12)) + np.sqrt(Determinant)  )/V12SQUARED)
 
             self.WallCollisionPoint = pos
-            self.WallCollisionTime = tc
+            self.Tc = tc
             # print("APPROACH",self.getR(), self.getV(), pos)
             #print("COLLISION WITH WALL", tc, pos)
         
         #check if this is the shortest event so far
         if not self.Simulator.ShortestCollision: self.setSimulatorShortest(); return
-        if self.Simulator.ShortestCollision > self.WallCollisionTime: self.setSimulatorShortest(); return
+        if self.Simulator.ShortestCollision > self.Tc: self.setSimulatorShortest(); return
         return 
 
 

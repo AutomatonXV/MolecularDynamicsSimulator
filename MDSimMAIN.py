@@ -1,5 +1,6 @@
 '''
 MOLECULAR DYNAMICS SIMULATOR 
+   STANDARD TIME ALGORITHM
         ARNAB SINHA
 '''
 #################################################
@@ -23,7 +24,7 @@ m = 0.1                             # mass
 V_spheres = 4/3*np.pi*(d/2)**3      # volume
 
 #   Simulation Constants
-N = 36                             # number of particles
+N = 128                             # number of particles
 eta = np.pi/15                      # packing fraction
 V = d**3 * (N*np.pi/(6*eta))        # volume of primary cube
 L = 1
@@ -48,7 +49,6 @@ for yPos in range(1,Sides+1):
 MainSim.ConstructPairs()
 
 SimulationStartTime = time.time()
-MainSim.Screenshot()
 while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS and MainSim.t0 < MainSim.MAXTIME:
         #reset collision objects
         MainSim.CollisionObject = None
@@ -72,7 +72,6 @@ while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS and MainSim.t0 < MainSim.MAXTI
         #print("Shortest Time",MainSim.ShortestCollision)
         
         MainSim.StepForward()
-        MainSim.Screenshot()
         if MainSim.t0 < OldTc: break #WTF?
 
         CollisionPercent = MainSim.COLLISIONS/MainSim.MAX_COLLISIONS*100

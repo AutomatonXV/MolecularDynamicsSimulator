@@ -88,6 +88,7 @@ class SimulatorClass:
         return isPaired
 
     def Screenshot(self,):
+        #NO LONGER REQUIRED
         #Save information of ALL positions+vel at EACH time frame.
         self.__getAllPositions()
        
@@ -146,18 +147,17 @@ class SimulatorClass:
         self.t0 = self.ShortestCollision
 
     def CTTSearchPosition(self,tc):
+        ''' EXPERIMENTAL (delete later)'''
         #find position of particle where it should be inserted
         #this position is the first highest time value, 
         #because when using insert, it will shove the value at that index right
         for i in range(len(self.CollisionTimeTable)):
             obj = self.CollisionTimeTable[i]
-            if isinstance(obj, ParticleClass):
-                t = obj.WallCollisionTime
-            else:
-                t = obj.Tc
-                #some pairs will never collide
-                #reached the end of the list that is full of Nones
-                if t == None: return i
+            
+            t = obj.Tc
+            #some pairs will never collide
+            #reached the end of the list that is full of Nones
+            if t == None: return i
 
             if t > tc:
                 return i
@@ -166,30 +166,34 @@ class SimulatorClass:
 
     def setCollisionTimeTable(self,):
         #now that all the particles and pairs have tc, rank them.
-
-        for p in self.Ensemble:
-            tc = p.WallCollisionTime
-            InsertIndex = self.CTTSearchPosition(tc)
-            if InsertIndex == None: 
-                self.CollisionTimeTable.append(p)
-            else:
-                self.CollisionTimeTable.insert(InsertIndex, p)
-
         for p in self.Pairs:
-            tc = p.Tc
-            #some particles will never collide
-            if tc == None: self.CollisionTimeTable.append(p); continue
+            self.CollisionTimeTable.append(p)
+        for p in self.Ensemble:
+            self.CollisionTimeTable.append(p)
 
-            InsertIndex = self.CTTSearchPosition(tc)
-            if InsertIndex == None: 
-                self.CollisionTimeTable.append(p)
-            else:
-                self.CollisionTimeTable.insert(InsertIndex, p)
-
-            
+    def getQuickestEvent(self,):
+        t = 10**10
+        obj = None
+        for p in self.CollisionTimeTable:
+            if p.Tc < t:
+                t = p.Tc
+                obj = p
+        return obj
         
+   
+    def printCTT(self):
+        #prints all particle times as sanity check, up to Nth particle
+        timetable = []
+        for p in self.CollisionTimeTable:
+            timetable.append(p.Tc)
+        print(timetable)
+        
+    def MaxWell2D(self,C, m, K, T):
+        A = (m/(K*T))
+        B = (-m/(2*K*T))
+        return A * C * np.exp(B * C**2)
 
-    def GenerateDistribution(self,):
+    def GenerateDistribution(self,m,K,T):
         def findBracket(x):
             #print("finding bracket for ",np.abs(x))
             #i = 0 #my bracket slot
@@ -221,6 +225,8 @@ class SimulatorClass:
            
             #Normalize by total particles
         Normalization = self.MAX_COLLISIONS*self.N
-        return self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
+        U,V,C = self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
+        return U,V,self.MaxWell2D(C,m,K,T)
 
-            
+
+   

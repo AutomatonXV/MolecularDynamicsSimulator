@@ -4,7 +4,7 @@ class PairsClass:
     def __init__(self, P1,P2, Simulator):
         self.Simulator = Simulator
         self.Pair = [P1,P2]
-        self.Tc = None #collision time
+        self.Tc = 10**10 #collision time
         #
         self.Pair[0].PairedPairs.append(self)
         self.Pair[1].PairedPairs.append(self)
@@ -15,6 +15,7 @@ class PairsClass:
 
     def updateCollisionTime(self,):
         t0 = self.Simulator.t0
+        self.Tc = 10**10 #set it to 'infinity'
         #condition 1: on approach
         sigma = self.Pair[0].d
         R12 = self.__getR12()
