@@ -3,8 +3,6 @@ import numpy as np
 class ParticleClass:
 
     def __init__(self, PosX, PosY, Diam, Mass, VelMag, Theta,Simulator,InitCount):
-        #override for testing
-        #Theta = np.deg2rad(30)
         
         #keep track of which iteration of the Simulator we are in.
         #set to -1 as default for the first step.

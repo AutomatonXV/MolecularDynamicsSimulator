@@ -7,9 +7,11 @@ class SimulatorClass:
 
     def __init__(self,N, eta,):
         #Set Maximum
-        self.MAX_COLLISIONS = 500
+        self.MAX_COLLISIONS =500
+        self.RELAX_PERCENT = 40/100
+        self.RELAX_COLLISIONS = self.MAX_COLLISIONS*self.RELAX_PERCENT
         self.COLLISIONS = 0
-        self.TIMESTEP = 0.0001
+        self.TIMESTEP = 0.00001
         self.MAXTIME = 1000
         #Variable Definitions
         self.t0 = 0
@@ -33,6 +35,7 @@ class SimulatorClass:
             Xpos = np.zeros(self.N);    Ypos = np.zeros(self.N)
             Uvel = np.zeros(self.N);    Vvel = np.zeros(self.N)
             self.Saved.append([Xpos, Ypos, Uvel, Vvel])
+        self.Historic = []
 
 
         #each zero is a count from 0-0.05, 0.05 to 0.1
@@ -49,23 +52,6 @@ class SimulatorClass:
         self.Sides = int(self.N**(1/2))
         self.Boundary = self.N**(1/2) + 1
 
-        #Store the plotter
-        self.plt = plt
-        self.fig = plt.figure()
-        self.ax = plt.gca()
-        self.ax.set_xscale('linear')
-        self.ax.set_yscale('linear')
-        self.ax.minorticks_on()
-
-        self.ax.spines['top'].set_visible(False)
-        self.ax.spines['right'].set_visible(False)
-
-        #Plots the current moment
-        self.plt.xlim([0,self.Sides+1+0.004])
-        self.plt.ylim([0,self.Sides+1])
-        #draw bounding boxes
-        self.plt.hlines([0,self.Boundary], 0, self.Boundary, color = 'k', linewidth = 2, linestyle = '--')
-        self.plt.vlines([0,self.Boundary], 0, self.Boundary, color = 'k', linewidth = 2, linestyle = '--')
         
 
     def ConstructPairs(self,):
@@ -87,31 +73,6 @@ class SimulatorClass:
             if p is P1: isPaired = True
         return isPaired
 
-    def Screenshot(self,):
-        #NO LONGER REQUIRED
-        #Save information of ALL positions+vel at EACH time frame.
-        self.__getAllPositions()
-       
-        
-    def Movie(self,):
-        for XY in self.Saved:
-            X,Y = XY[0],XY[1]
-            tp = self.plt.scatter(X,Y,color = 'r', s = 3)
-            self.plt.pause(self.TIMESTEP)
-            tp.remove()
-        self.plt.show()
-
-    def __getAllPositions(self,):
-        #The following is being handled by Particle updatePosition(), hopefully
-        # c = self.COLLISIONS #index 
-        
-        # for i in range(0,self.N):
-        #     p = self.Ensemble[i]
-        #     self.Saved[c][0][i] = p.R[0];  self.Saved[c][1][i] = p.R[1]
-        #     self.Saved[c][2][i] = p.V[0];  self.Saved[c][3][i] = p.V[1]
-        pass
-        #return Xpos, Ypos, Uvel, Vvel
-
 
     def StepForward(self,):
         self.COLLISIONS = self.COLLISIONS + 1
@@ -123,8 +84,6 @@ class SimulatorClass:
 
         #after updating the position, check what type of collision it was
         if isinstance(self.CollisionObject, ParticleClass):
-            #print("It was a particle that collided with wall!")
-            #print(self.CollisionObject.WallCollisionPoint)
             CP = self.CollisionObject.WallCollisionPoint
             #This is going to be very dumb:
             if CP[0] == 0 or CP[0] == self.Boundary:
@@ -132,7 +91,6 @@ class SimulatorClass:
             if CP[1] == 0 or CP[1]== self.Boundary:
                 self.CollisionObject.V[1] = -self.CollisionObject.V[1]
         else:
-            #print("It was a particle that collided with another particle!")
             P1, P2 = self.CollisionObject.Pair[0], self.CollisionObject.Pair[1]
             R1, R2 = P1.getR(), P2.getR()
             V1, V2 = P1.getV(), P2.getV()
@@ -145,23 +103,6 @@ class SimulatorClass:
            
         #update time
         self.t0 = self.ShortestCollision
-
-    def CTTSearchPosition(self,tc):
-        ''' EXPERIMENTAL (delete later)'''
-        #find position of particle where it should be inserted
-        #this position is the first highest time value, 
-        #because when using insert, it will shove the value at that index right
-        for i in range(len(self.CollisionTimeTable)):
-            obj = self.CollisionTimeTable[i]
-            
-            t = obj.Tc
-            #some pairs will never collide
-            #reached the end of the list that is full of Nones
-            if t == None: return i
-
-            if t > tc:
-                return i
-        return None #insert at the end of the list
 
 
     def setCollisionTimeTable(self,):
@@ -195,8 +136,6 @@ class SimulatorClass:
 
     def GenerateDistribution(self,m,K,T):
         def findBracket(x):
-            #print("finding bracket for ",np.abs(x))
-            #i = 0 #my bracket slot
             x = np.abs(x)
             for i in range(0, int(self.BracketSteps)):
                 StartRange = 0.05*i
@@ -205,10 +144,14 @@ class SimulatorClass:
                     return i
             return None #faster than 5 unit/time
         
+        CurrentEnsemble = 0
         for Ensemble in self.Saved:
+            CurrentEnsemble = CurrentEnsemble + 1
             #0 = X, 1 = Y, 2 = U, 3 = V
             #These are the lists of u,v of every single particle
             UList,VList = Ensemble[2], Ensemble[3]
+            if CurrentEnsemble <= self.RELAX_COLLISIONS: continue
+
             for i in range(len(UList)):
                 U,V = UList[i], VList[i]
                 C =  np.sqrt(U**2 + V**2)
@@ -222,10 +165,13 @@ class SimulatorClass:
                     self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
                 if C_i != None:
                     self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
-           
+            #print("Are we reaching this line?")
+            self.Historic.append(self.SpeedBracketsC/(CurrentEnsemble*self.N*self.BracketInterval))
+             
             #Normalize by total particles
-        Normalization = self.MAX_COLLISIONS*self.N
+        Normalization = self.MAX_COLLISIONS*self.N*self.BracketInterval
         U,V,C = self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
+    
         return U,V,self.MaxWell2D(C,m,K,T)
 
 
