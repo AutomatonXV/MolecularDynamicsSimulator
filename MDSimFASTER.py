@@ -27,7 +27,7 @@ T = 1/2
 V_spheres = 4/3*np.pi*(d/2)**3      # volume
 
 #   Simulation Constants
-N = 36                             # number of particles
+N = 400                             # number of particles
 eta = np.pi/15                      # packing fraction
 V = d**3 * (N*np.pi/(6*eta))        # volume of primary cube
 L = 1
@@ -115,9 +115,24 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
 '''
     POST PROCESSING
 '''
-AnimateParticles = AnimatorClass(MainSim)
-AnimateParticles.Movie()
+# AnimateParticles = AnimatorClass(MainSim)
+# AnimateParticles.Movie()
 
-AnimateStatistics = AnimatorClass(MainSim)
-AnimateStatistics.StatisticsMovie(m,K,T)
+# Stats3D = AnimatorClass(MainSim)
+# Stats3D.StatisticsEnd2D(m,K,T)
 
+# Stats1D = AnimatorClass(MainSim)
+# Stats1D.StatisticsEnd1D(True, m,K,T)
+
+# Stats1D = AnimatorClass(MainSim)
+# Stats1D.StatisticsEnd1D(False,m,K,T)
+
+
+# AnimateStatistics = AnimatorClass(MainSim)
+# AnimateStatistics.StatisticsMovieV2(m,K,T)
+
+Brownian = AnimatorClass(MainSim)
+#Brownian.InitialFrame(MainSim.N)
+colorseq = [(1,0,0), (0,0,1), (0,178/255,18/255), (0.6,0.6,0.6)]
+particleseq = [0,N-1]
+Brownian.DrawBrownian(particleseq, colorseq)

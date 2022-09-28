@@ -7,8 +7,8 @@ class SimulatorClass:
 
     def __init__(self,N, eta,):
         #Set Maximum
-        self.MAX_COLLISIONS =500
-        self.RELAX_PERCENT = 40/100
+        self.MAX_COLLISIONS =1000
+        self.RELAX_PERCENT = 15/100
         self.RELAX_COLLISIONS = self.MAX_COLLISIONS*self.RELAX_PERCENT
         self.COLLISIONS = 0
         self.TIMESTEP = 0.00001
@@ -30,6 +30,7 @@ class SimulatorClass:
 
         #FullSimulation
         self.Saved = []
+        self.RawU, self.RawV, self.RawC = [],[],[] #for histogramming
         #populate this with MAXCOLLISION
         for c in range(self.MAX_COLLISIONS+1):
             Xpos = np.zeros(self.N);    Ypos = np.zeros(self.N)
@@ -133,46 +134,84 @@ class SimulatorClass:
         A = (m/(K*T))
         B = (-m/(2*K*T))
         return A * C * np.exp(B * C**2)
+    
+    def MaxWell1D(self, C, m, K, T):
+        A = m/(2*np.pi*K*T)
+        B = (-m/(2*K*T))
+        return (A ** (1/2) ) * np.exp(B*C**2)
 
-    def GenerateDistribution(self,m,K,T):
-        def findBracket(x):
-            x = np.abs(x)
-            for i in range(0, int(self.BracketSteps)):
-                StartRange = 0.05*i
-                EndRange = 0.05*(i+1)
-                if StartRange <= x and x < EndRange:
-                    return i
-            return None #faster than 5 unit/time
-        
+    def getRaw(self, ):
+        Utbl,Vtbl,Ctbl = [],[],[]
         CurrentEnsemble = 0
         for Ensemble in self.Saved:
             CurrentEnsemble = CurrentEnsemble + 1
-            #0 = X, 1 = Y, 2 = U, 3 = V
-            #These are the lists of u,v of every single particle
             UList,VList = Ensemble[2], Ensemble[3]
             if CurrentEnsemble <= self.RELAX_COLLISIONS: continue
 
             for i in range(len(UList)):
                 U,V = UList[i], VList[i]
                 C =  np.sqrt(U**2 + V**2)
-                #do not confuse the i subscript here with i'th iter
-                # it is to say i_th "bracket"
-                U_i,V_i,C_i = findBracket(U), findBracket(V), findBracket(C)
-                if U_i != None:
-                    self.SpeedBracketsU[U_i] = self.SpeedBracketsU[U_i] + 1
+                Utbl.append(U); Vtbl.append(V); Ctbl.append(C)
+        self.RawU, self.RawV, self.RawC = Utbl, Vtbl, Ctbl
+        return Utbl, Vtbl, Ctbl
 
-                if V_i != None:
-                    self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
-                if C_i != None:
-                    self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
-            #print("Are we reaching this line?")
-            self.Historic.append(self.SpeedBracketsC/(CurrentEnsemble*self.N*self.BracketInterval))
-             
-            #Normalize by total particles
-        Normalization = self.MAX_COLLISIONS*self.N*self.BracketInterval
-        U,V,C = self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
+    def generateHistoric(self, m,K,T):
+        CurrentEnsemble = 0
+        for Ensemble in self.Saved:
+            CurrentEnsemble = CurrentEnsemble + 1
+            if CurrentEnsemble <= self.RELAX_COLLISIONS: continue
+            UList, VList = Ensemble[2], Ensemble[3]
+            CCount = []
+            for i in range(len(UList)):
+                U,V = UList[i], VList[i]
+                C =  np.sqrt(U**2 + V**2)
+                CCount.append(C)
+            self.Historic.append(CCount)
+#DEPRECATED METHODS
+    # def GenerateDistribution(self,m,K,T):
+    #     def findBracket(x):
+    #         x = np.abs(x)
+    #         for i in range(0, int(self.BracketSteps)):
+    #             StartRange = 0.05*i
+    #             EndRange = 0.05*(i+1)
+    #             if StartRange <= x and x < EndRange:
+    #                 return i
+    #         return None #faster than 5 unit/time
+        
+    #     CurrentEnsemble = 0
+    #     for Ensemble in self.Saved:
+    #         CurrentEnsemble = CurrentEnsemble + 1
+    #         #0 = X, 1 = Y, 2 = U, 3 = V
+    #         #These are the lists of u,v of every single particle
+    #         UList,VList = Ensemble[2], Ensemble[3]
+    #         if CurrentEnsemble <= self.RELAX_COLLISIONS: continue
+
+    #         for i in range(len(UList)):
+    #             U,V = UList[i], VList[i]
+    #             C =  np.sqrt(U**2 + V**2)
+    #             #do not confuse the i subscript here with i'th iter
+    #             # it is to say i_th "bracket"
+    #             U_i,V_i,C_i = findBracket(U), findBracket(V), findBracket(C)
+    #             if U_i != None:
+    #                 self.SpeedBracketsU[U_i] = self.SpeedBracketsU[U_i] + 1
+
+    #             if V_i != None:
+    #                 self.SpeedBracketsV[V_i] = self.SpeedBracketsV[V_i] + 1
+    #             if C_i != None:
+    #                 self.SpeedBracketsC[C_i] = self.SpeedBracketsC[C_i] + 1
+    #         #print("Are we reaching this line?")
+    #         #this is to save at each step
+    #         Division = CurrentEnsemble*self.N*self.BracketInterval
+    #         self.Historic.append(self.SpeedBracketsC/(Division))
+    #         #self.HistoricX.append(self.SpeedBracketsU/(Division))
+    #         #self.HistoricY.append(self.SpeedBracketsV/(Division))
+        
+    #     #Normalize by total particles
+    #     #this is to save overall
+    #     Normalization = self.MAX_COLLISIONS*self.N*self.BracketInterval
+    #     U,V,C = self.SpeedBracketsU/Normalization, self.SpeedBracketsV/Normalization, self.SpeedBracketsC/Normalization
     
-        return U,V,self.MaxWell2D(C,m,K,T)
+    #     return U,V,C#self.MaxWell2D(C,m,K,T)
 
 
    

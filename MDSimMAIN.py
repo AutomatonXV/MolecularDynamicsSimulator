@@ -25,7 +25,7 @@ T = 1/2
 V_spheres = 4/3*np.pi*(d/2)**3      # volume
 
 #   Simulation Constants
-N = 36                             # number of particles
+N = 400                             # number of particles
 eta = np.pi/15                      # packing fraction
 V = d**3 * (N*np.pi/(6*eta))        # volume of primary cube
 L = 1
@@ -82,10 +82,10 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
 '''
         POST-PROCESSING
 '''
-AnimateParticles = AnimatorClass(MainSim)
-AnimateParticles.Movie()
+# AnimateParticles = AnimatorClass(MainSim)
+# AnimateParticles.Movie()
 
 AnimateStatistics = AnimatorClass(MainSim)
-AnimateStatistics.StatisticsMovie(m,K,T)
+AnimateStatistics.StatisticsEnd2D(m,K,T)
 
 
