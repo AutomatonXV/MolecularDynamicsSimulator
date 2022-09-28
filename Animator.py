@@ -116,7 +116,7 @@ class AnimatorClass:
         indeks = 0
         for XY_i in MyPositions:
             clr = colorlist[indeks] 
-            self.plt.plot(XY_i[0],XY_i[1], linestyle = 'dashed', marker = 'o', markersize = 3, color = clr)
+            self.plt.plot(XY_i[0],XY_i[1], linestyle = 'dashed', marker = 'o', markersize = 1, color = clr)
             indeks +=1
         self.plt.show()   
 

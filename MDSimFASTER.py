@@ -115,8 +115,8 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
 '''
     POST PROCESSING
 '''
-# AnimateParticles = AnimatorClass(MainSim)
-# AnimateParticles.Movie()
+AnimateParticles = AnimatorClass(MainSim)
+AnimateParticles.Movie()
 
 # Stats3D = AnimatorClass(MainSim)
 # Stats3D.StatisticsEnd2D(m,K,T)
@@ -134,5 +134,5 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
 Brownian = AnimatorClass(MainSim)
 #Brownian.InitialFrame(MainSim.N)
 colorseq = [(1,0,0), (0,0,1), (0,178/255,18/255), (0.6,0.6,0.6)]
-particleseq = [0,N-1]
+particleseq = [0,19, N-20, N-1]
 Brownian.DrawBrownian(particleseq, colorseq)
