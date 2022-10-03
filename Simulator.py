@@ -7,8 +7,8 @@ class SimulatorClass:
 
     def __init__(self,N, eta,):
         #Set Maximum
-        self.MAX_COLLISIONS =2000
-        self.RELAX_PERCENT = 0/100
+        self.MAX_COLLISIONS =60000
+        self.RELAX_PERCENT =  10/100
         self.RELAX_COLLISIONS = self.MAX_COLLISIONS*self.RELAX_PERCENT
         self.COLLISIONS = 0
         self.TIMESTEP = 0.00001

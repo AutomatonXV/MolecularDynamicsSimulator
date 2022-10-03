@@ -60,7 +60,7 @@ MainSim.setCollisionTimeTable()
 '''
     EQUILIBRIZATION
 '''
-
+print("SIMULATION HAS BEGUN.")
 SimulationStartTime = time.time()
 
 while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS:
@@ -100,7 +100,7 @@ while MainSim.COLLISIONS < MainSim.MAX_COLLISIONS:
         pass
 
     CollisionPercent = MainSim.COLLISIONS/MainSim.MAX_COLLISIONS*100
-    if CollisionPercent%25 == 0: 
+    if CollisionPercent%5 == 0: 
         print("COLLISION %\t",100* MainSim.COLLISIONS/MainSim.MAX_COLLISIONS, 
         "%, \tSIM. TIME\t", MainSim.t0,
         "\t Time Elapsed: \t",time.time() - SimulationStartTime)
@@ -115,14 +115,14 @@ print("TOTAL TIME ELAPSED:\t", Elapsed)
 '''
     POST PROCESSING
 '''
-AnimateParticles = AnimatorClass(MainSim)
-AnimateParticles.Movie()
+# AnimateParticles = AnimatorClass(MainSim)
+# AnimateParticles.Movie()
 
-# Stats3D = AnimatorClass(MainSim)
-# Stats3D.StatisticsEnd2D(m,K,T)
+Stats3D = AnimatorClass(MainSim)
+Stats3D.StatisticsEnd2D(m,K,T)
 
-# Stats1D = AnimatorClass(MainSim)
-# Stats1D.StatisticsEnd1D(True, m,K,T)
+Stats1D = AnimatorClass(MainSim)
+Stats1D.StatisticsEnd1D(True, m,K,T)
 
 # Stats1D = AnimatorClass(MainSim)
 # Stats1D.StatisticsEnd1D(False,m,K,T)
@@ -131,8 +131,8 @@ AnimateParticles.Movie()
 # AnimateStatistics = AnimatorClass(MainSim)
 # AnimateStatistics.StatisticsMovieV2(m,K,T)
 
-Brownian = AnimatorClass(MainSim)
-#Brownian.InitialFrame(MainSim.N)
-colorseq = [(1,0,0), (0,0,1), (0,178/255,18/255), (0.6,0.6,0.6)]
-particleseq = [0,19, N-20, N-1]
-Brownian.DrawBrownian(particleseq, colorseq)
+# Brownian = AnimatorClass(MainSim)
+# #Brownian.InitialFrame(MainSim.N)
+# colorseq = [(1,0,0), (0,0,1), (0,178/255,18/255), (0.6,0.6,0.6)]
+# particleseq = [0,19, N-20, N-1]
+# Brownian.DrawBrownian(particleseq, colorseq)
